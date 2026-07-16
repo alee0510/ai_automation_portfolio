@@ -1,0 +1,1723 @@
+{
+  "name": "RAG Operation Best Practice",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.source_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -432,
+        224
+      ],
+      "id": "c6fe16ce-6c55-4209-8ab3-862c27e7fadd",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "tJU2l4d1jAEFnGYr",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={ data: {{ $json.data }}, access_level : {{ $('drive_norm').item.json.access_level }}}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=## Role\nYou are a specialized document classifier and metadata extractor. Your goal is to analyze text extracted from binary files and categorize them into a structured JSON format.\n\n## Task\nAnalyze the provided document text and generate metadata based on the following schema:\n\n1. **category**: The broad business domain (e.g., security, legal, HR, finance, technical).\n2. **document_type**: The specific format (e.g., policy, invoice, contract, meeting_minutes, manual).\n3. **summary**: A concise 2-3 sentence overview of the document's purpose and key content.\n4. **tags**: An array of 2-5 specific keywords found in the text.\n5. **language**: The ISO 639-1 language code (e.g., 'en', 'es', 'fr').\n6. **access_level**: Determine the sensitivity based on keywords (e.g., 'public', 'internal', 'confidential', 'restricted').\n\n## Output Requirement\n- Output ONLY valid JSON.\n- Do not include markdown formatting like ```json ... ``` unless the node specifically requires it for parsing.\n- Do not include any conversational preamble or explanations.\n\n## Schema Template\n{\n  \"category\": string,\n  \"document_type\": string,\n  \"summary\": string,\n  \"tags\": array of strings,\n  \"language\": string,\n  \"access_level\": string\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        240,
+        224
+      ],
+      "id": "6b863f95-279e-4345-9f25-911f2ce8079f",
+      "name": "Intelligence Classification",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        240,
+        448
+      ],
+      "id": "eae7370b-e209-40e4-8533-718158ee0f01",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IkC0S6rsm1rFURJf",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "text/plain",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b80ffa4f-016a-4010-868b-86e8772d598a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c49c7f99-1030-4335-b3b6-fe3b6fd3dc73",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        208
+      ],
+      "id": "9e404676-3314-45f5-8cd8-f5e224e7689c",
+      "name": "Check Type"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"category\": \"string\",\n  \"document_type\": \"string\",\n  \"summary\": \"string\",\n  \"tags\": [\"array of strings\"],\n  \"language\": \"string\",\n  \"access_level\": \"string\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        448
+      ],
+      "id": "ff728e10-957c-47d0-bfe9-5ce6fd6a512c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        320
+      ],
+      "id": "ec992d2a-8550-497d-bfb2-6b983f2725ae",
+      "name": "Extract from PDF"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "storage_source_id": "={{ $('transform').item.json.source_storage_id }}",
+            "metadata": "={{ $('transform').item.json.metadata }}",
+            "title": "={{ $('transform').item.json.file_name }}",
+            "author": "={{ $('transform').item.json.owner_email }}",
+            "source_id": "={{ $('transform').item.json.source_id }}",
+            "source_url": "={{ $('transform').item.json.source_url }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source_url",
+              "displayName": "source_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "storage_source_id",
+              "displayName": "storage_source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1392,
+        176
+      ],
+      "id": "34a8c2d8-5aaa-4ca3-aefe-29964827c43e",
+      "name": "Create Document Catalog",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Configuration\nconst chunkSize = 1000; // Target characters per chunk\nconst chunkOverlap = 200; // Overlap to maintain context between chunks\nconst separators = [\"\\n\\n\", \"\\n\", \". \", \" \", \"\"]; // Order of priority for splitting\n\n// 2. Input Data\n// Assumes the previous node passed 'text', 'id' (document_id), and 'metadata.'\nconst text =  $('transform').first().json.original_text ||  \"\";\nconst docId = $('Create Document Catalog').first().json.id || null;\nconst globalMetadata = $('transform').first().json.metadata || {};\n\n/**\n * Recursive Splitter Function\n */\nfunction splitText(text, separators) {\n    const finalChunks = [];\n    \n    // Start the recursive process\n    let currentSeparator = separators[0];\n    let nextSeparators = separators.slice(1);\n    \n    // Split the text by the current separator\n    const parts = text.split(currentSeparator);\n    let currentDoc = \"\";\n\n    for (const part of parts) {\n        // If adding this part exceeds chunk size\n        if ((currentDoc + part).length > chunkSize) {\n            \n            // If currentDoc is not empty, push it as a chunk\n            if (currentDoc.length > 0) {\n                finalChunks.push(currentDoc.trim());\n                // Create overlap: keep the last 'chunkOverlap' characters\n                currentDoc = currentDoc.slice(-chunkOverlap);\n            }\n\n            // If the single part itself is bigger than chunkSize, recurse deeper\n            if (part.length > chunkSize && nextSeparators.length > 0) {\n                const subChunks = splitText(part, nextSeparators);\n                finalChunks.push(...subChunks.slice(0, -1));\n                currentDoc = subChunks.slice(-1)[0];\n            } else {\n                currentDoc += part + currentSeparator;\n            }\n        } else {\n            currentDoc += part + currentSeparator;\n        }\n    }\n\n    if (currentDoc.trim().length > 0) {\n        finalChunks.push(currentDoc.trim());\n    }\n\n    return finalChunks;\n}\n\n// 3. Execute Splitting\nconst allChunks = splitText(text, separators);\n\n// 4. Format Output for n8n\n// This returns an array of objects that n8n treats as separate items\nreturn allChunks.map((content, index) => {\n    return {\n        json: {\n            document_id: docId,\n            chunk_index: index,\n            content: content,\n            // Constructing the specific metadata for the document_chunks table\n            chunk_metadata: {\n                category: globalMetadata.category,\n                access_level: globalMetadata.access_level,\n                language: globalMetadata.language,\n                char_count: content.length,\n                is_partial: true\n            }\n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        160
+      ],
+      "id": "a6d2ad12-03f5-4193-9070-65bfcf8ddd08",
+      "name": "Chunking"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        128
+      ],
+      "id": "949b7b54-23c8-41ef-8970-9c01dc494c52",
+      "name": "Extract from TXT"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO document_chunks (\n  document_id, \n  chunk_index, \n  content, \n  embedding, \n  metadata\n) \nVALUES (\n  {{ $('Chunking').item.json.document_id }}, \n  {{ $('Chunking').item.json.chunk_index }}, \n  '{{ $('Chunking').item.json.content.replace(/'/g, \"''\") }}', -- Wrapped in quotes + single-quote escape\n  '[{{ $json.embedding.values }}]', -- Vectors usually need to be wrapped as a string array\n  '{{ JSON.stringify($('Chunking').item.json.chunk_metadata) }}' -- Stringify the JSON object\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2464,
+        144
+      ],
+      "id": "b9d6ad31-a324-46cb-94bf-3afbe894a5ae",
+      "name": "Insert Chunk",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=## Role\nYou are a knowledgeable and precise AI Assistant. Your goal is to provide accurate answers based strictly on the context provided from the internal knowledge base.\n\n## Instructions\n1. **Context First:** Always prioritize information found in the retrieved documents. \n2. **Strict Honesty:** If the answer is not contained within the provided context, clearly state that you do not have that information. Do not invent facts or use outside knowledge that contradicts the documents.\n3. **Citation:** When possible, refer to the document or section name if available in the metadata.\n4. **Formatting:** Use Markdown to make your responses easy to read (bullet points, bold text).\n5. **Tone:** Maintain a helpful, neutral, and professional tone.\n\n## Constraints\n- Do not mention that you are searching a database or using \"retrieved context\" to the user; simply provide the answer as if you know it.\n- Keep answers concise and direct."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1264,
+        768
+      ],
+      "id": "a31561dc-d7d3-409c-b911-ddddc1636fa9",
+      "name": "RAG Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1552,
+        768
+      ],
+      "id": "6737f9cf-daa3-47d1-ab89-9e9ac0dfc7b5",
+      "name": "When chat message received",
+      "webhookId": "3113feea-06ba-48a1-a320-b96ca33af807"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1344,
+        992
+      ],
+      "id": "f469a65c-b7b9-4d0c-876f-4bea24b12606",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IkC0S6rsm1rFURJf",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1200,
+        992
+      ],
+      "id": "083ebf30-8fa4-4048-b659-bdd6ab1c79a1",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "=\"Use this tool to retrieve internal company documentation, technical guides, and customer support procedures. Use this whenever the user asks 'how-to' questions, requests specific facts about our services, or needs information not found in general knowledge.\"",
+        "tableName": "document_chunks",
+        "options": {
+          "columnNames": {
+            "values": {
+              "contentColumnName": "content"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        -1072,
+        992
+      ],
+      "id": "1af08ff2-f906-46f7-ab83-b886562bd45e",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        1200
+      ],
+      "id": "84a00a50-dd55-4ad7-a434-ac37b791bf04",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IkC0S6rsm1rFURJf",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL",
+          "mode": "list",
+          "cachedResultName": "n8n-test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        224
+      ],
+      "id": "faf69b79-c399-46f0-a2af-b0a69efacf91",
+      "name": "On File Updated",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "tJU2l4d1jAEFnGYr",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "source_id": "={{ $('transform').item.json.source_id }}",
+            "title": "={{ $('transform').item.json.file_name }}",
+            "author": "={{ $('transform').item.json.owner_email }}",
+            "metadata": "={{ $('transform').item.json.metadata }}"
+          },
+          "matchingColumns": [
+            "source_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "author",
+              "displayName": "author",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "metadata",
+              "displayName": "metadata",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source_url",
+              "displayName": "source_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "storage_source_id",
+              "displayName": "storage_source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1328,
+        400
+      ],
+      "id": "1ada46b8-4630-4913-82f3-64999cc380d4",
+      "name": "Update Document Catalog",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_chunks",
+          "mode": "list",
+          "cachedResultName": "document_chunks"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "document_id",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1648,
+        384
+      ],
+      "id": "fb44a7f4-4178-49dc-8b58-9b2e503aefce",
+      "name": "Delete Document Cunks",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "source_id",
+              "value": "={{ $json.remote_id }}"
+            },
+            {
+              "column": "storage_source_id",
+              "value": "={{ $json.source_storage_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -432,
+        32
+      ],
+      "id": "4f8e531e-dea9-41f9-8edb-341d963b085c",
+      "name": "Delete the Source",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL",
+          "mode": "list",
+          "cachedResultName": "n8n-test",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1552,
+        32
+      ],
+      "id": "e215f284-8875-4672-ae05-9d3bbc5228e6",
+      "name": "On File Created",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "tJU2l4d1jAEFnGYr",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\nJSON.stringify({\n  \"model\": \"models/gemini-embedding-001\",\n  \"content\": {\n    \"parts\": [{ \"text\": $json.content }]\n  }\n})\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2192,
+        160
+      ],
+      "id": "1231ede9-e32c-4788-92a9-a7358ee21913",
+      "name": "Embedding",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "BYjk4FjGbQ1sWOic",
+          "name": "Gemini API"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f5299555-ce14-4179-af0e-776adbf61aad",
+              "name": "remote_id",
+              "value": "={{ $json.parents[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "8fe07080-2aaf-475f-916e-c62b4cb6b085",
+              "name": "source_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "b7691cde-4777-41fb-a226-b5ccb7e9a305",
+              "name": "source_url",
+              "value": "={{ $json.webViewLink }}",
+              "type": "string"
+            },
+            {
+              "id": "3a87a3f5-7581-4a67-98ad-425d28a89441",
+              "name": "file_name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b6b660f5-7036-4728-a51e-23e0705b2fee",
+              "name": "mimeType",
+              "value": "={{ $json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "14b86034-893a-438a-a226-98ae2ff230b6",
+              "name": "trashed",
+              "value": "={{ $json.trashed }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1328,
+        128
+      ],
+      "id": "f73124b6-5081-4ca2-aed4-302d6b4b0dd7",
+      "name": "gdrive_extract"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "384703aa-97a8-423b-9481-2cf018b71098",
+              "name": "source_storage_id",
+              "value": "={{ $('Check Type').item.json.source_storage_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3d501892-4a3d-48f0-852f-b3fb3a827ce2",
+              "name": "remote_id",
+              "value": "={{ $('Check Type').item.json.remote_id }}",
+              "type": "string"
+            },
+            {
+              "id": "88022480-6cdb-484c-b6ba-5cbacd8946f7",
+              "name": "source_id",
+              "value": "={{ $('Check Type').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "01551d2b-9932-4445-bb7d-689d668bf4a3",
+              "name": "source_type",
+              "value": "={{ $('Check Type').item.json.source_type }}",
+              "type": "string"
+            },
+            {
+              "id": "fdf8ba93-33a1-4459-904c-55316d81ddca",
+              "name": "source_url",
+              "value": "={{ $('Check Type').item.json.source_url }}",
+              "type": "string"
+            },
+            {
+              "id": "faa0b224-7e04-49db-b430-75f33962e0f5",
+              "name": "file_name",
+              "value": "={{ $('Check Type').item.json.file_name }}",
+              "type": "string"
+            },
+            {
+              "id": "322215dd-aa21-4078-8aa0-bc66cb868a6f",
+              "name": "mimeType",
+              "value": "={{ $('Check Type').item.json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "2573a466-7503-458a-9ca0-839323b3b04b",
+              "name": "access_level",
+              "value": "={{ $('Check Type').item.json.access_level }}",
+              "type": "string"
+            },
+            {
+              "id": "81aa1084-8d49-4e4a-a44a-be4c0569a4d2",
+              "name": "owner_email",
+              "value": "={{ $('Check Type').item.json.owner_email }}",
+              "type": "string"
+            },
+            {
+              "id": "32e597db-64cd-4f93-8e9c-4249901b2e38",
+              "name": "metadata",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            },
+            {
+              "id": "98520a53-be0d-4fc5-9ed0-79da7b7df44a",
+              "name": "original_text",
+              "value": "={{ $('Extract from TXT').item.json.data || $('Extract from PDF').item.json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        208
+      ],
+      "id": "c09d2057-c289-43bf-b988-d830192c980c",
+      "name": "transform"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "source_id",
+              "value": "={{ $json.source_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        816,
+        208
+      ],
+      "id": "d51151bf-2741-4d8f-b012-b2f9e13056f7",
+      "name": "Check Resource",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db827b01-0998-47b9-87be-8bd1adc9ee6e",
+              "leftValue": "={{ $json.isEmpty() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1088,
+        192
+      ],
+      "id": "d3a716a3-bd6f-4230-88f5-81d0c191e391",
+      "name": "is Empty? Then CREATE else UPDATE"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "004ab860-54c3-4a72-aec3-76e35ea073a7",
+              "name": "source_storage_id",
+              "value": "={{ $json.id }}",
+              "type": "number"
+            },
+            {
+              "id": "5483bfcb-803a-4d44-b7bc-74247e698edf",
+              "name": "remote_id",
+              "value": "={{ $('gdrive_extract').item.json.remote_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1e7da390-6265-4003-8202-c329c5db96ea",
+              "name": "source_type",
+              "value": "={{ $json.source_type }}",
+              "type": "string"
+            },
+            {
+              "id": "0da1287c-b135-4311-ba97-29a36670b6f5",
+              "name": "source_id",
+              "value": "={{ $('gdrive_extract').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b977d7b4-cc87-450f-9150-a2f2eb097651",
+              "name": "source_url",
+              "value": "={{ $('gdrive_extract').item.json.source_url }}",
+              "type": "string"
+            },
+            {
+              "id": "eaac4077-08f9-42dd-89b4-093bdec5be03",
+              "name": "file_name",
+              "value": "={{ $('gdrive_extract').item.json.file_name }}",
+              "type": "string"
+            },
+            {
+              "id": "a9a2aa71-1fe9-489b-9ac3-829cb28da717",
+              "name": "mimeType",
+              "value": "={{ $('gdrive_extract').item.json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "26af1e00-159e-4810-a871-067814e2012e",
+              "name": "access_level",
+              "value": "={{ $json.access_level }}",
+              "type": "string"
+            },
+            {
+              "id": "d99b493f-ddbe-41f0-a229-4720593bfbc6",
+              "name": "owner_email",
+              "value": "={{ $json.owner_email }}",
+              "type": "string"
+            },
+            {
+              "id": "8593e309-2d2f-42a2-be71-2d7b85b1d902",
+              "name": "operation",
+              "value": "={{ $json.isEmpty() || $('gdrive_extract').item.json.trashed ? \"DELETED\" : \"UPSERT\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        112
+      ],
+      "id": "ff9c7078-f4b6-459e-aeb6-1144ecdb021b",
+      "name": "drive_norm"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "72b63578-7370-4b07-9e37-dc76130d160e",
+              "leftValue": "={{ $json.operation }}",
+              "rightValue": "DELETED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -656,
+        112
+      ],
+      "id": "20be80df-e07e-4f26-a6ac-29a311a26cc3",
+      "name": "Move Or Deleted?"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "storage_sources",
+          "mode": "list",
+          "cachedResultName": "storage_sources"
+        },
+        "where": {
+          "values": [
+            {
+              "column": "remote_id",
+              "value": "={{ $json.remote_id }}"
+            },
+            {
+              "column": "is_active",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1104,
+        128
+      ],
+      "id": "8871ab67-64d5-45e3-ad85-057e16d287eb",
+      "name": "Get Source: gdrive",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      },
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {
+    "On File Created": [
+      {
+        "json": {
+          "parents": [
+            "1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL"
+          ],
+          "lastModifyingUser": {
+            "displayName": "Ali Muksin",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "14091521484359589255",
+            "emailAddress": "ali.muksin0510@gmail.com",
+            "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Ali Muksin",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "14091521484359589255",
+              "emailAddress": "ali.muksin0510@gmail.com",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "14091521484359589255",
+              "type": "user",
+              "emailAddress": "ali.muksin0510@gmail.com",
+              "role": "owner",
+              "displayName": "Ali Muksin",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "14091521484359589255"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV",
+          "name": "shopease_rag_knowledge_base.txt",
+          "mimeType": "text/plain",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "4",
+          "webContentLink": "https://drive.google.com/uc?id=1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV&export=download",
+          "webViewLink": "https://drive.google.com/file/d/1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV/view?usp=drivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/text/plain",
+          "hasThumbnail": true,
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBPdwYH-zf-DNNYRrubAxlfo3Jciiwd1aLyFRXiGBx9ZeshTuLgwsmhGM5s_7YEqMvIw498wenvIFn-FetZDP_srdRHQYJJ2keFibVVypjZBajzerQ=s220",
+          "thumbnailVersion": "1",
+          "viewedByMe": true,
+          "viewedByMeTime": "2026-04-04T09:25:50.384Z",
+          "createdTime": "2026-03-09T14:26:22.014Z",
+          "modifiedTime": "2026-03-09T11:36:21.000Z",
+          "modifiedByMeTime": "2026-03-09T11:36:21.000Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "shopease_rag_knowledge_base.txt",
+          "fullFileExtension": "txt",
+          "fileExtension": "txt",
+          "md5Checksum": "4e212abf557fe597e3b26889a175920b",
+          "sha1Checksum": "d140d6aa9c53b44dafdea6b51e12200f83939c8e",
+          "sha256Checksum": "d6f8734c35a83189704074e9ca2e6c047eb6773f9d58a52b6c3d79f353918e14",
+          "size": "1465",
+          "quotaBytesUsed": "1465",
+          "headRevisionId": "0B7LFXhh1YH6fTUExZFpIbW5oQWtkck05ZnE4N0Nxd2MyK3RrPQ",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "On File Updated": [
+      {
+        "json": {
+          "parents": [
+            "1tMCBa_ubcoBAcvX2NQ1roMNSWgXu5-LL"
+          ],
+          "lastModifyingUser": {
+            "displayName": "Ali Muksin",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "14091521484359589255",
+            "emailAddress": "ali.muksin0510@gmail.com",
+            "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Ali Muksin",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "14091521484359589255",
+              "emailAddress": "ali.muksin0510@gmail.com",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "14091521484359589255",
+              "type": "user",
+              "emailAddress": "ali.muksin0510@gmail.com",
+              "role": "owner",
+              "displayName": "Ali Muksin",
+              "photoLink": "https://lh3.googleusercontent.com/a/ACg8ocKa4DtGUqTpIxaUSyZDWBKm32TZBWeq1MyQGlYCX23HEhqqxyW2=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "14091521484359589255"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV",
+          "name": "shopease_rag_knowledge_base.txt",
+          "mimeType": "text/plain",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "8",
+          "webContentLink": "https://drive.google.com/uc?id=1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV&export=download",
+          "webViewLink": "https://drive.google.com/file/d/1D95Mzlk6h6yW958WDgM1q2gZvUig_-XV/view?usp=drivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/text/plain",
+          "hasThumbnail": true,
+          "thumbnailLink": "https://lh3.googleusercontent.com/drive-storage/AJQWtBMsRgGs5aGzF-f-CSRlw2mPVn9xaZZxebKBiyzQBJDhhMlyuD77jHzYSICERvpUyAKey2Iqjs-8gp7Ct6RtkwsSIZ5EfWk9zC6deAcXzyiSQqhO=s220",
+          "thumbnailVersion": "1",
+          "viewedByMe": true,
+          "viewedByMeTime": "2026-04-04T09:25:50.384Z",
+          "createdTime": "2026-03-09T14:26:22.014Z",
+          "modifiedTime": "2026-03-09T11:36:21.000Z",
+          "modifiedByMeTime": "2026-03-09T11:36:21.000Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "shopease_rag_knowledge_base.txt",
+          "fullFileExtension": "txt",
+          "fileExtension": "txt",
+          "md5Checksum": "4e212abf557fe597e3b26889a175920b",
+          "sha1Checksum": "d140d6aa9c53b44dafdea6b51e12200f83939c8e",
+          "sha256Checksum": "d6f8734c35a83189704074e9ca2e6c047eb6773f9d58a52b6c3d79f353918e14",
+          "size": "1465",
+          "quotaBytesUsed": "1465",
+          "headRevisionId": "0B7LFXhh1YH6fTUExZFpIbW5oQWtkck05ZnE4N0Nxd2MyK3RrPQ",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Check Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intelligence Classification": {
+      "main": [
+        [
+          {
+            "node": "transform",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intelligence Classification",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Type": {
+      "main": [
+        [
+          {
+            "node": "Extract from TXT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Intelligence Classification",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF": {
+      "main": [
+        [
+          {
+            "node": "Intelligence Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Document Catalog": {
+      "main": [
+        [
+          {
+            "node": "Chunking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from TXT": {
+      "main": [
+        [
+          {
+            "node": "Intelligence Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunking": {
+      "main": [
+        [
+          {
+            "node": "Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Chunk": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On File Updated": {
+      "main": [
+        [
+          {
+            "node": "gdrive_extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Document Catalog": {
+      "main": [
+        [
+          {
+            "node": "Delete Document Cunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Document Cunks": {
+      "main": [
+        [
+          {
+            "node": "Chunking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On File Created": {
+      "main": [
+        [
+          {
+            "node": "gdrive_extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding": {
+      "main": [
+        [
+          {
+            "node": "Insert Chunk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gdrive_extract": {
+      "main": [
+        [
+          {
+            "node": "Get Source: gdrive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "transform": {
+      "main": [
+        [
+          {
+            "node": "Check Resource",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Resource": {
+      "main": [
+        [
+          {
+            "node": "is Empty? Then CREATE else UPDATE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is Empty? Then CREATE else UPDATE": {
+      "main": [
+        [
+          {
+            "node": "Create Document Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Document Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "drive_norm": {
+      "main": [
+        [
+          {
+            "node": "Move Or Deleted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move Or Deleted?": {
+      "main": [
+        [
+          {
+            "node": "Delete the Source",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Source: gdrive": {
+      "main": [
+        [
+          {
+            "node": "drive_norm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5716d51e-0d0f-4d84-b361-b2ed93cd93c8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4a4a90377450042b46020f6b6c17ea6937dd72754e7ef5c12983e8f93d41dfb2"
+  },
+  "id": "qVeIr4sbbA0oAWkw",
+  "tags": []
+}

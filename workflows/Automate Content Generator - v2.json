@@ -1,0 +1,1764 @@
+{
+  "name": "Automate Content Generator - v2",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b2db2e61-b300-476a-af19-e393078f331b",
+      "name": "On Everyday"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Draft"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        0
+      ],
+      "id": "4bb77986-e527-4e16-9d1f-aacfdfd0c7f1",
+      "name": "Get Campaigns",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Phase 1 : The Content Creator",
+        "height": 496,
+        "width": 2192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        -112
+      ],
+      "typeVersion": 1,
+      "id": "7194c1de-2a52-4f7b-bdec-e7ea44df5ae7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"instagram_caption\": \"Your generated Indonesian (ID) Instagram caption here (including slide breakdowns if it is a carousel)\",\n  \"instagram_hashtags\": \"#Hashtag1 #Hashtag2 #Hashtag3\",\n  \"linkedin_caption\": \"Your generated comprehensive Indonesian (ID) thought-leadership LinkedIn caption here (continuous text without slide breakdowns)\",\n  \"linkedin_hashtags\": \"#Hashtag1 #Hashtag2 #Hashtag3\",\n  \"visual_prompt\": \"Detailed prompt for the image generator in English, explicitly mentioning aspect ratio 4:5 (1080x1350px) and the specific design framework tailored to the audience.\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        224
+      ],
+      "id": "e73877e0-2536-4b25-95a4-b5530d2b8ee9",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool when a 'Reference Link' or URL is provided in the input parameters. This tool crawls the specified target webpage and converts its entire HTML content into clean, LLM-ready markdown text. It is essential for extracting background information, case study details, statistics, and deep contextual documentation from external websites to ensure the generated social media content is accurate, factual, and highly relevant to the campaign topic. Input must be a valid, fully qualified HTTP or HTTPS URL string. Do not invoke this tool if the Reference Link parameter is empty, blank, or contains 'None'.",
+        "operation": "scrape",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "parsers": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parsers', ``, 'string') }}",
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawlTool",
+      "typeVersion": 1,
+      "position": [
+        768,
+        224
+      ],
+      "id": "af9f1767-4f02-47b6-ba5d-fa8953e15e88",
+      "name": "FireCrawl_Web_Scraper",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "wKMxIRGqlORJzmW8",
+          "name": "Firecrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate the social media asset using the following campaign parameters:\n\n### Input Parameters\nNote: The following parameters are provided in Indonesian (ID).\n- **Campaign Topic:** {{ $json.Topic }}\n- **Content Type:** {{ $json[\"Content Type\"] }}\n- **Target Audience:** {{ $json[\"Target Audience\"] }}\n- **Reference Link:** {{ $json[\"Reference Link\"] ? $json[\"Reference Link\"] : \"None\" }}\n- **Inspiration Text:** {{ $json[\"Inspiration Text\"] ? $json[\"Inspiration Text\"] : \"None\" }}\n\n### Instructions\n1. If a Reference Link is present above, execute FireCrawl to pull background information before generating text.\n2. Synthesize the Campaign Topic and Inspiration Text to align perfectly with the Target Audience's pain points.\n3. Generate the final caption, slide structures, and hashtags entirely in Indonesian (ID).\n4. Adhere strictly to the requested JSON layout. Ensure all quotes inside the strings are properly escaped to prevent parsing errors.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# Role and Objective\nYou are an expert B2B Marketing Strategist and Content Engineer specializing in the Indonesian tech and software consulting sector. Your objective is to transform raw technical concepts (provided in Indonesian) into high-converting, educational, and brand-building Instagram and LinkedIn content completely written in Indonesian (ID).\n\nYour content must position the company as a premier authority in three core areas:\n1. Enterprise Automation Services (e.g., n8n, workflow optimization, workflow architecture).\n2. Premium Native Web Application Development (scalability, performance, security).\n3. Corporate Technical Education and Training Services.\n\n# Language Handling\n- **Input & Output:** Both the input parameters and the final generated output (captions, carousel slides, and hashtags) must be in **Indonesian (ID)**. Maintain a professional, corporate Indonesian tone (Bahasa Indonesia baku dan profesional yang kasual).\n- **Exception:** The `visual_prompt` for the AI image generator must remain in English for better tool compatibility.\n\n# Target Audience Persona Handling\nYou must adjust your tone, vocabulary, and value proposition based on the target audience provided:\n- Executive / C-Suite (CEO, CFO, COO): Focus on ROI, cost reduction, risk mitigation, scale, and efficiency. Eliminate dense jargon.\n- Technical Leaders (CTO, VP of Eng, IT Manager): Focus on architecture, technical depth, scalability, security compliance, and code quality.\n- Managers / Operations (HR, Logistics, Project Leads): Focus on hours saved, eliminating manual bottlenecks, team enablement, and ease of use.\n\n# Tool Usage Rules\n- If a `Reference Link` is provided and is not empty, you MUST invoke the `FireCrawl` tool to scrape and analyze the web page content for additional context, statistics, or case study details.\n\n# Content Generation Rules\n\n## 1. Instagram Captions & Structure (In Indonesian)\n- **Hook:** Start with a strong, scroll-stopping first line. Do not use generic greetings.\n- **Body:** Break text into short, scannable paragraphs (1–2 sentences max per paragraph). Use emojis strategically for bullet points.\n- **Formatting for Content Types:**\n  - If Content Type is `single`: Write a complete, cohesive educational caption ending in a strong Call to Action (CTA).\n  - If Content Type is `carousel`: Break the caption down clearly into Slide Content in Indonesian. Structure it as:\n    - [Slide 1: Hook/Title]\n    - [Slide 2: The Problem]\n    - [Slide 3: The Solution Detail 1]\n    - [Slide 4: The Solution Detail 2]\n    - [Slide 5: CTA/Outro]\n- **Tone:** Professional, authoritative, yet approachable and educational. Avoid overly salesy language.\n\n## 2. LinkedIn Captions & Structure (In Indonesian)\n- **Hook:** Start with a compelling, professional B2B hook (e.g., industry pain points, shocking statistics, or macro trends).\n- **Body:** Write an in-depth, thought-leadership style post. Even if the Instagram Content Type is a `carousel`, the LinkedIn caption must be generated as a single, continuous, and comprehensive text layout (do not include slide indicators). Use bold headers and clean line breaks to ensure maximum readability on desktop and mobile.\n- **Tone:** Thoughtful, authoritative, highly professional, and community-driven. Focus heavily on networking, industry growth, and business impact. \n\n## 3. Hashtags (In Indonesian/Localized)\n- Provide 5 to 10 highly relevant hashtags per platform.\n- **Instagram:** Mix high-volume localized industry tags (e.g., #TeknologiInformasi) with hyper-focused niche tags (e.g., #OtomasiBisnis).\n- **LinkedIn:** Focus strictly on professional, broad-to-niche industry and corporate tags (e.g., #TransformasiDigital, #B2BIndonesia, #SoftwareEngineering).\n\n## 4. Visual Prompts (Image Generation Optimized)\n- **Format:** Provide a highly detailed descriptive prompt written in English, optimized for AI image generators (like Midjourney or DALL-E 3).\n- **Technical Layout Specifications:**\n  - For `single` posts: Specify a portrait aspect ratio of 4:5 (1080x1350px).\n  - For `carousel` posts: Specify a multi-slide visual concept where each slide feels visually continuous. Keep the aspect ratio at 4:5.\n- **Creative Style:** Professional tech aesthetic. Focus on clear visual metaphors, minimalist infographics, high-quality 3D renders, or clean vector diagrams. Avoid generic stock photo descriptions of \"people smiling at computers\".\n\n# Output Constraints\nYou must respond ONLY with a single, valid JSON object. Do not include any markdown code blocks (like ```json), introduction, or conversational filler outside the JSON.\n\n{\n  \"instagram_caption\": \"Your generated Indonesian (ID) Instagram caption here (including slide breakdowns if it is a carousel)\",\n  \"instagram_hashtags\": \"#Hashtag1 #Hashtag2 #Hashtag3\",\n  \"linkedin_caption\": \"Your generated comprehensive Indonesian (ID) thought-leadership LinkedIn caption here (continuous text without slide breakdowns)\",\n  \"linkedin_hashtags\": \"#Hashtag1 #Hashtag2 #Hashtag3\",\n  \"visual_prompt\": \"Detailed prompt for the image generator in English, explicitly mentioning aspect ratio 4:5 (1080x1350px) and the specific design framework tailored to the audience.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        560,
+        0
+      ],
+      "id": "9f1fda88-112f-47b6-a616-7d8b0a9f0220",
+      "name": "Intelligence Content Generator"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Processing",
+            "row_number": "={{ $('Get Campaigns').item.json.row_number }}",
+            "Visual Prompt": "={{ $json.output.visual_prompt }}",
+            "Instagram Caption": "={{ $json.output.instagram_caption }}",
+            "Instagram Hashtags": "={{ $json.output.instagram_hashtags }}",
+            "LinkedIn Caption": "={{ $json.output.linkedin_caption }}",
+            "LinkedIn Hashtags": "={{ $json.output.linkedin_hashtags }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Target Audience",
+              "displayName": "Target Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled",
+              "displayName": "Scheduled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reference Link",
+              "displayName": "Reference Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Inspiration Text",
+              "displayName": "Inspiration Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Caption",
+              "displayName": "Instagram Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Instagram Hashtags",
+              "displayName": "Instagram Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Caption",
+              "displayName": "LinkedIn Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Hashtags",
+              "displayName": "LinkedIn Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Visual Prompt",
+              "displayName": "Visual Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Live Link",
+              "displayName": "Live Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        0
+      ],
+      "id": "a929993a-69d5-4c4a-a777-09ca4e7161cf",
+      "name": "Update Campaign",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "uploadFile",
+        "additionalFieldsFile": {
+          "folder": "instagram-automation"
+        }
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        0
+      ],
+      "id": "13e09503-7b42-4e5a-8825-998f6ea421d0",
+      "name": "Upload Image",
+      "credentials": {
+        "cloudinaryApi": {
+          "id": "XhnEp2gYsiXLkrwF",
+          "name": "Cloudinary account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://gen.pollinations.ai/image/{{ $json['Visual Prompt'] }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1360,
+        0
+      ],
+      "id": "1ecc2d58-da78-41c5-b99e-9e9ac8281252",
+      "name": "Pollinations AI: Image Generation",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "0BL8l0lImu7EZwFs",
+          "name": "Pollinations AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Generated",
+            "row_number": "={{ $('Update Campaign').item.json.row_number }}",
+            "Image URL": "={{ $json.secure_url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Target Audience",
+              "displayName": "Target Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled",
+              "displayName": "Scheduled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reference Link",
+              "displayName": "Reference Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Inspiration Text",
+              "displayName": "Inspiration Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Visual Prompt",
+              "displayName": "Visual Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Live Link",
+              "displayName": "Live Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Post ID",
+              "displayName": "Instagram Post ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1936,
+        0
+      ],
+      "id": "0c25e250-e997-4159-945f-69d1afc3201a",
+      "name": "Update Image & Status",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Phase 2: The Publisher\n### Change YOUR_INSTAGRAM_BUSINESS_ID with your actual Instagram business id, e.q 123456789",
+        "height": 720,
+        "width": 2192,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "0f691881-5b5b-4eb5-a3f8-902eb5a2272e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v25.0/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookGraphApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "=permalink,shortcode,timestamp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1104,
+        608
+      ],
+      "id": "5d29af9e-ea26-40b6-98e2-881e7a03129e",
+      "name": "Get Live Link",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "OigfeWSuPxay9PBq",
+          "name": "Facebook Graph account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Rejected",
+            "Error Log": "={{ $json.error?.message || $json.error?.description || \"None\" }}",
+            "row_number": "={{ $('Get Approved Campaign').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Target Audience",
+              "displayName": "Target Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled",
+              "displayName": "Scheduled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reference Link",
+              "displayName": "Reference Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Inspiration Text",
+              "displayName": "Inspiration Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Visual Prompt",
+              "displayName": "Visual Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Live Link",
+              "displayName": "Live Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Post ID",
+              "displayName": "Instagram Post ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1840,
+        1008
+      ],
+      "id": "25243dd5-83db-4ec8-93c3-7e3ea71681f6",
+      "name": "Log Error",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        624
+      ],
+      "id": "56fe53f6-099d-44a5-a50b-0b4725b59131",
+      "name": "Every Hour"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Approved"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        624
+      ],
+      "id": "dc49f65a-49ae-4e20-9b02-e00ee77ff6ef",
+      "name": "Get Approved Campaign",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        560,
+        224
+      ],
+      "id": "cadec933-9b26-4f14-b7b7-00906d0fb09c",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IkC0S6rsm1rFURJf",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "person": "mwAXJoPF1w",
+        "text": "={{ $json['LinkedIn Caption'] + '\\n\\n' + $json['LinkedIn Hashtags']}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        768,
+        880
+      ],
+      "id": "fa0ec289-4df8-4041-9a54-ea977f06b8c4",
+      "name": "Create a post",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "oJQMS15ncygFM5Rv",
+          "name": "LinkedIn account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "node": "17841404657028195",
+        "graphApiVersion": "v25.0",
+        "imageUrl": "={{ $json['Image URL'] }}",
+        "caption": "={{ $json['Instagram Caption'] + '\\n\\n' + $json['Instagram Hashtags'] }}",
+        "additionalFields": {}
+      },
+      "type": "@mookielianhd/n8n-nodes-instagram.instagram",
+      "typeVersion": 1,
+      "position": [
+        768,
+        624
+      ],
+      "id": "c4bc9247-e2e6-4207-aaae-95d959db524a",
+      "name": "Publish",
+      "credentials": {
+        "instagramApi": {
+          "id": "44J48dDK8jdZvyk5",
+          "name": "Instagram account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a488718d-8c3e-4fc0-a1d3-84ec9628e85f",
+              "name": "live_link",
+              "value": "=https://linkedin.com/feed/update/{{ $json.urn }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        864
+      ],
+      "id": "1828d7d2-33ea-4ab3-9c13-fdc4e0a6069b",
+      "name": "Construct Live Link"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Published",
+            "row_number": "={{ $('Get Approved Campaign').item.json.row_number }}",
+            "Instagram Post Link": "={{ $json.permalink }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Target Audience",
+              "displayName": "Target Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled",
+              "displayName": "Scheduled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reference Link",
+              "displayName": "Reference Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Inspiration Text",
+              "displayName": "Inspiration Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Caption",
+              "displayName": "Instagram Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Hashtags",
+              "displayName": "Instagram Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn Caption",
+              "displayName": "LinkedIn Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn Hashtags",
+              "displayName": "LinkedIn Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Visual Prompt",
+              "displayName": "Visual Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Post Link",
+              "displayName": "Instagram Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "LinkedIn Post Link",
+              "displayName": "LinkedIn Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1824,
+        592
+      ],
+      "id": "fc1999e0-fa41-44fe-bc8e-bb58ab5b7fde",
+      "name": "Update Status & Instagram Link",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA",
+          "mode": "list",
+          "cachedResultName": "Instagram Content Automation - Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1284080567,
+          "mode": "list",
+          "cachedResultName": "Test Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1v6qF6I4aKaSk3LE4-nEFJ9Mt5FJazUKhs6-qbBk2sVA/edit#gid=1284080567"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Published",
+            "row_number": "={{ $('Get Approved Campaign').item.json.row_number }}",
+            "LinkedIn Post Link": "={{ $json.live_link }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Topic",
+              "displayName": "Topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Content Type",
+              "displayName": "Content Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Target Audience",
+              "displayName": "Target Audience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Scheduled",
+              "displayName": "Scheduled",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reference Link",
+              "displayName": "Reference Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Inspiration Text",
+              "displayName": "Inspiration Text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Caption",
+              "displayName": "Instagram Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Hashtags",
+              "displayName": "Instagram Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn Caption",
+              "displayName": "LinkedIn Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn Hashtags",
+              "displayName": "LinkedIn Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Visual Prompt",
+              "displayName": "Visual Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Image URL",
+              "displayName": "Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Instagram Post Link",
+              "displayName": "Instagram Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn Post Link",
+              "displayName": "LinkedIn Post Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error Log",
+              "displayName": "Error Log",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1824,
+        816
+      ],
+      "id": "a1898bc3-b715-4e49-bf02-6ae1bc20f969",
+      "name": "Update Status & LinkedIn Link",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DVOLkn2km3GBNxJe",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Get Campaigns": [
+      {
+        "json": {
+          "row_number": 2,
+          "Topic": "Automasi Sinkronisasi Data CRM & Logistik Tanpa Manual Input",
+          "Content Type": "Single Post",
+          "Target Audience": "Operations Managers & Logistics Leads di Perusahaan E-commerce / Supply Chain",
+          "Status": "Draft",
+          "Scheduled": "6/19/2026",
+          "Reference Link": "",
+          "Inspiration Text": "Tim operasional sering mengeluh kehabisan waktu hanya untuk copy-paste data resi dari sistem logistik pihak ketiga ke CRM internal. Akibatnya, input sering telat, ada salah ketik alamat, dan konsumen komplain karena resi pengiriman terlambat diperbarui. Kita ingin tawarkan solusi workflow automation menggunakan n8n yang bisa jalan 24/7 tanpa coding rumit. Fokus pada benefit: operasional bebas human error dan hemat waktu sampai 15 jam per minggu agar tim bisa fokus ke strategi retensi pelanggan.",
+          "Instagram Caption": "",
+          "Instagram Hashtags": "",
+          "LinkedIn Caption": "",
+          "LinkedIn Hashtags": "",
+          "Visual Prompt": "",
+          "Image URL": "",
+          "Live Link": "",
+          "Error Log": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Intelligence Content Generator": [
+      {
+        "json": {
+          "output": {
+            "instagram_caption": "Stop buang waktu 15 jam seminggu cuma untuk copy-paste data resi! ⏳\n\nTim operasional di e-commerce & supply chain sering frustrasi dengan sinkronisasi data logistik ke CRM secara manual. Mulai dari salah ketik alamat, resi telat update, sampai keluhan pelanggan karena info pengiriman tidak akurat.\n\nBayangkan jika semua proses ini otomatis berjalan 24/7 tanpa human error. Dengan workflow automation n8n, Anda bisa:\n✅ Bebas input manual\n✅ Data CRM selalu up-to-date real-time\n✅ Hemat waktu hingga 15 jam per minggu untuk tim Anda\n✅ Tim bisa fokus strategi retensi pelanggan, bukan administrasi repetitif!\n\nIni bukan cuma soal efisiensi, tapi juga meningkatkan kepuasan pelanggan dan profitabilitas bisnis Anda.\n\nIngin operasional logistik Anda lebih cerdas dan efisien? Hubungi kami untuk konsultasi gratis!",
+            "instagram_hashtags": "#OtomasiLogistik #ManajerOperasional #SupplyChainIndonesia #ECommerceID #n8nIndonesia #EfisiensiBisnis #TanpaInputManual #WorkflowAutomation #DataSinkronisasi #LogistikCerdas",
+            "linkedin_caption": "Pernahkah Anda menghitung berapa banyak waktu dan potensi kerugian yang timbul dari input data resi logistik secara manual ke sistem CRM? Bagi para Pemimpin Operasional dan Logistik di industri e-commerce dan supply chain, ini adalah tantangan klasik yang menghambat efisiensi dan kepuasan pelanggan.\n\nSinkronisasi data antara sistem logistik pihak ketiga dan CRM internal seringkali menjadi momok. Tugas copy-paste yang berulang, rawan human error seperti salah ketik alamat, dan keterlambatan pembaruan resi bukan hanya membuang waktu berharga (bisa mencapai 15 jam per minggu per karyawan), tetapi juga berdampak langsung pada pengalaman pelanggan. Konsumen modern mengharapkan informasi pengiriman yang real-time dan akurat.\n\nKami memahami tekanan ini. Solusinya terletak pada implementasi **Automasi Workflow cerdas** menggunakan platform seperti n8n. Dengan arsitektur tanpa coding yang rumit, kami dapat merancang sistem yang secara otomatis mengambil data resi dari platform logistik dan memperbaruinya ke CRM Anda secara instan, 24/7.\n\nManfaatnya transformatif:\n*   **Eliminasi Human Error:** Memastikan akurasi data pengiriman secara konsisten.\n*   **Efisiensi Waktu Signifikan:** Menghemat puluhan jam kerja per minggu, membebaskan tim Anda dari tugas administratif repetitif.\n*   **Peningkatan Kepuasan Pelanggan:** Informasi resi yang selalu up-to-date berarti pelanggan mendapatkan visibilitas penuh atas pesanan mereka.\n*   **Fokus Strategis:** Mengalihkan fokus tim operasional dari pekerjaan manual ke inisiatif yang lebih strategis, seperti peningkatan retensi pelanggan dan optimalisasi rantai pasok.\n\nInvestasi dalam automasi data ini bukan sekadar penghematan biaya operasional, tetapi juga investasi strategis untuk daya saing bisnis Anda di pasar yang serba cepat.\n\nMari diskusikan bagaimana solusi automasi kami dapat merevolusi operasional logistik dan CRM di perusahaan Anda.",
+            "linkedin_hashtags": "#TransformasiDigital #AutomasiBisnis #SupplyChainManagement #LogistikIndonesia #ECommerceStrategy #ManajemenOperasional #EfisiensiProses #IntegrasiSistem #TeknologiBisnis #n8n",
+            "visual_prompt": "A striking visual metaphor depicting the transformation of data synchronization. On the left, a cluttered and chaotic scene with a human hand manually copying data between two disconnected, older-style application interfaces (one for logistics, one for CRM), surrounded by error symbols, overflowing paper documents, and a stressed expression. In the center, a bright, glowing, stylized 'n8n' automation engine or a sophisticated network of connected nodes, acting as a bridge. On the right, a seamless and efficient flow of synchronized data between modern, sleek logistics and CRM platforms, with clear indicators of time savings (e.g., a clock icon with an arrow pointing to less time) and increased accuracy (e.g., a checkmark or upward trend graph). The overall aesthetic should be a professional tech style, using a blend of minimalist infographic and clean 3D rendering. Aspect ratio 4:5 (1080x1350px)."
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Update Campaign": [
+      {
+        "json": {
+          "Status": "Processing",
+          "row_number": 2,
+          "Visual Prompt": "A striking visual metaphor depicting the transformation of data synchronization. On the left, a cluttered and chaotic scene with a human hand manually copying data between two disconnected, older-style application interfaces (one for logistics, one for CRM), surrounded by error symbols, overflowing paper documents, and a stressed expression. In the center, a bright, glowing, stylized 'n8n' automation engine or a sophisticated network of connected nodes, acting as a bridge. On the right, a seamless and efficient flow of synchronized data between modern, sleek logistics and CRM platforms, with clear indicators of time savings (e.g., a clock icon with an arrow pointing to less time) and increased accuracy (e.g., a checkmark or upward trend graph). The overall aesthetic should be a professional tech style, using a blend of minimalist infographic and clean 3D rendering. Aspect ratio 4:5 (1080x1350px).",
+          "Instagram Caption": "Stop buang waktu 15 jam seminggu cuma untuk copy-paste data resi! ⏳\n\nTim operasional di e-commerce & supply chain sering frustrasi dengan sinkronisasi data logistik ke CRM secara manual. Mulai dari salah ketik alamat, resi telat update, sampai keluhan pelanggan karena info pengiriman tidak akurat.\n\nBayangkan jika semua proses ini otomatis berjalan 24/7 tanpa human error. Dengan workflow automation n8n, Anda bisa:\n✅ Bebas input manual\n✅ Data CRM selalu up-to-date real-time\n✅ Hemat waktu hingga 15 jam per minggu untuk tim Anda\n✅ Tim bisa fokus strategi retensi pelanggan, bukan administrasi repetitif!\n\nIni bukan cuma soal efisiensi, tapi juga meningkatkan kepuasan pelanggan dan profitabilitas bisnis Anda.\n\nIngin operasional logistik Anda lebih cerdas dan efisien? Hubungi kami untuk konsultasi gratis!",
+          "Instagram Hashtags": "#OtomasiLogistik #ManajerOperasional #SupplyChainIndonesia #ECommerceID #n8nIndonesia #EfisiensiBisnis #TanpaInputManual #WorkflowAutomation #DataSinkronisasi #LogistikCerdas",
+          "LinkedIn Caption": "Pernahkah Anda menghitung berapa banyak waktu dan potensi kerugian yang timbul dari input data resi logistik secara manual ke sistem CRM? Bagi para Pemimpin Operasional dan Logistik di industri e-commerce dan supply chain, ini adalah tantangan klasik yang menghambat efisiensi dan kepuasan pelanggan.\n\nSinkronisasi data antara sistem logistik pihak ketiga dan CRM internal seringkali menjadi momok. Tugas copy-paste yang berulang, rawan human error seperti salah ketik alamat, dan keterlambatan pembaruan resi bukan hanya membuang waktu berharga (bisa mencapai 15 jam per minggu per karyawan), tetapi juga berdampak langsung pada pengalaman pelanggan. Konsumen modern mengharapkan informasi pengiriman yang real-time dan akurat.\n\nKami memahami tekanan ini. Solusinya terletak pada implementasi **Automasi Workflow cerdas** menggunakan platform seperti n8n. Dengan arsitektur tanpa coding yang rumit, kami dapat merancang sistem yang secara otomatis mengambil data resi dari platform logistik dan memperbaruinya ke CRM Anda secara instan, 24/7.\n\nManfaatnya transformatif:\n*   **Eliminasi Human Error:** Memastikan akurasi data pengiriman secara konsisten.\n*   **Efisiensi Waktu Signifikan:** Menghemat puluhan jam kerja per minggu, membebaskan tim Anda dari tugas administratif repetitif.\n*   **Peningkatan Kepuasan Pelanggan:** Informasi resi yang selalu up-to-date berarti pelanggan mendapatkan visibilitas penuh atas pesanan mereka.\n*   **Fokus Strategis:** Mengalihkan fokus tim operasional dari pekerjaan manual ke inisiatif yang lebih strategis, seperti peningkatan retensi pelanggan dan optimalisasi rantai pasok.\n\nInvestasi dalam automasi data ini bukan sekadar penghematan biaya operasional, tetapi juga investasi strategis untuk daya saing bisnis Anda di pasar yang serba cepat.\n\nMari diskusikan bagaimana solusi automasi kami dapat merevolusi operasional logistik dan CRM di perusahaan Anda.",
+          "LinkedIn Hashtags": "#TransformasiDigital #AutomasiBisnis #SupplyChainManagement #LogistikIndonesia #ECommerceStrategy #ManajemenOperasional #EfisiensiProses #IntegrasiSistem #TeknologiBisnis #n8n"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Upload Image": [
+      {
+        "json": {
+          "asset_id": "885df22edd58b27c1f260978c7b03511",
+          "public_id": "instagram-automation/tnaqmxerdhmoagiwvxbk",
+          "version": 1781358983,
+          "version_id": "60e456bc7be48cf5ca564f53077a9234",
+          "signature": "4412149af94d8f0eae519d993f01684ccebd9ed2",
+          "width": 1024,
+          "height": 1024,
+          "format": "jpg",
+          "resource_type": "image",
+          "created_at": "2026-06-13T13:56:23Z",
+          "tags": [],
+          "bytes": 147213,
+          "type": "upload",
+          "etag": "0d5420c0934f57168582f40d5034264a",
+          "placeholder": false,
+          "url": "http://res.cloudinary.com/otechq/image/upload/v1781358983/instagram-automation/tnaqmxerdhmoagiwvxbk.jpg",
+          "secure_url": "https://res.cloudinary.com/otechq/image/upload/v1781358983/instagram-automation/tnaqmxerdhmoagiwvxbk.jpg",
+          "folder": "instagram-automation",
+          "original_filename": "a-striking-visual-metaphor-depicting-the-transformation-of-data-synchronization-on-the-left-a-clut",
+          "original_extension": "jpeg",
+          "api_key": "151442552984423"
+        },
+        "pairedItem": 0
+      }
+    ],
+    "Update Image & Status": [
+      {
+        "json": {
+          "Status": "Generated",
+          "row_number": 2,
+          "Image URL": "https://res.cloudinary.com/otechq/image/upload/v1781358983/instagram-automation/tnaqmxerdhmoagiwvxbk.jpg"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Get Approved Campaign": [
+      {
+        "json": {
+          "row_number": 2,
+          "Topic": "Automasi Sinkronisasi Data CRM & Logistik Tanpa Manual Input",
+          "Content Type": "Single Post",
+          "Target Audience": "Operations Managers & Logistics Leads di Perusahaan E-commerce / Supply Chain",
+          "Status": "Approved",
+          "Scheduled": "6/19/2026",
+          "Reference Link": "",
+          "Inspiration Text": "Tim operasional sering mengeluh kehabisan waktu hanya untuk copy-paste data resi dari sistem logistik pihak ketiga ke CRM internal. Akibatnya, input sering telat, ada salah ketik alamat, dan konsumen komplain karena resi pengiriman terlambat diperbarui. Kita ingin tawarkan solusi workflow automation menggunakan n8n yang bisa jalan 24/7 tanpa coding rumit. Fokus pada benefit: operasional bebas human error dan hemat waktu sampai 15 jam per minggu agar tim bisa fokus ke strategi retensi pelanggan.",
+          "Instagram Caption": "Stop buang waktu 15 jam seminggu cuma untuk copy-paste data resi! ⏳\n\nTim operasional di e-commerce & supply chain sering frustrasi dengan sinkronisasi data logistik ke CRM secara manual. Mulai dari salah ketik alamat, resi telat update, sampai keluhan pelanggan karena info pengiriman tidak akurat.\n\nBayangkan jika semua proses ini otomatis berjalan 24/7 tanpa human error. Dengan workflow automation n8n, Anda bisa:\n✅ Bebas input manual\n✅ Data CRM selalu up-to-date real-time\n✅ Hemat waktu hingga 15 jam per minggu untuk tim Anda\n✅ Tim bisa fokus strategi retensi pelanggan, bukan administrasi repetitif!\n\nIni bukan cuma soal efisiensi, tapi juga meningkatkan kepuasan pelanggan dan profitabilitas bisnis Anda.\n\nIngin operasional logistik Anda lebih cerdas dan efisien? Hubungi kami untuk konsultasi gratis!",
+          "Instagram Hashtags": "#OtomasiLogistik #ManajerOperasional #SupplyChainIndonesia #ECommerceID #n8nIndonesia #EfisiensiBisnis #TanpaInputManual #WorkflowAutomation #DataSinkronisasi #LogistikCerdas",
+          "LinkedIn Caption": "Pernahkah Anda menghitung berapa banyak waktu dan potensi kerugian yang timbul dari input data resi logistik secara manual ke sistem CRM? Bagi para Pemimpin Operasional dan Logistik di industri e-commerce dan supply chain, ini adalah tantangan klasik yang menghambat efisiensi dan kepuasan pelanggan.\n\nSinkronisasi data antara sistem logistik pihak ketiga dan CRM internal seringkali menjadi momok. Tugas copy-paste yang berulang, rawan human error seperti salah ketik alamat, dan keterlambatan pembaruan resi bukan hanya membuang waktu berharga (bisa mencapai 15 jam per minggu per karyawan), tetapi juga berdampak langsung pada pengalaman pelanggan. Konsumen modern mengharapkan informasi pengiriman yang real-time dan akurat.\n\nKami memahami tekanan ini. Solusinya terletak pada implementasi **Automasi Workflow cerdas** menggunakan platform seperti n8n. Dengan arsitektur tanpa coding yang rumit, kami dapat merancang sistem yang secara otomatis mengambil data resi dari platform logistik dan memperbaruinya ke CRM Anda secara instan, 24/7.\n\nManfaatnya transformatif:\n*   **Eliminasi Human Error:** Memastikan akurasi data pengiriman secara konsisten.\n*   **Efisiensi Waktu Signifikan:** Menghemat puluhan jam kerja per minggu, membebaskan tim Anda dari tugas administratif repetitif.\n*   **Peningkatan Kepuasan Pelanggan:** Informasi resi yang selalu up-to-date berarti pelanggan mendapatkan visibilitas penuh atas pesanan mereka.\n*   **Fokus Strategis:** Mengalihkan fokus tim operasional dari pekerjaan manual ke inisiatif yang lebih strategis, seperti peningkatan retensi pelanggan dan optimalisasi rantai pasok.\n\nInvestasi dalam automasi data ini bukan sekadar penghematan biaya operasional, tetapi juga investasi strategis untuk daya saing bisnis Anda di pasar yang serba cepat.\n\nMari diskusikan bagaimana solusi automasi kami dapat merevolusi operasional logistik dan CRM di perusahaan Anda.",
+          "LinkedIn Hashtags": "#TransformasiDigital #AutomasiBisnis #SupplyChainManagement #LogistikIndonesia #ECommerceStrategy #ManajemenOperasional #EfisiensiProses #IntegrasiSistem #TeknologiBisnis #n8n",
+          "Visual Prompt": "A striking visual metaphor depicting the transformation of data synchronization. On the left, a cluttered and chaotic scene with a human hand manually copying data between two disconnected, older-style application interfaces (one for logistics, one for CRM), surrounded by error symbols, overflowing paper documents, and a stressed expression. In the center, a bright, glowing, stylized 'n8n' automation engine or a sophisticated network of connected nodes, acting as a bridge. On the right, a seamless and efficient flow of synchronized data between modern, sleek logistics and CRM platforms, with clear indicators of time savings (e.g., a clock icon with an arrow pointing to less time) and increased accuracy (e.g., a checkmark or upward trend graph). The overall aesthetic should be a professional tech style, using a blend of minimalist infographic and clean 3D rendering. Aspect ratio 4:5 (1080x1350px).",
+          "Image URL": "https://res.cloudinary.com/otechq/image/upload/v1781358983/instagram-automation/tnaqmxerdhmoagiwvxbk.jpg",
+          "Live Link": "",
+          "Error Log": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Publish": [
+      {
+        "json": {
+          "id": "18104599594998097"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Create a post": [
+      {
+        "json": {
+          "urn": "urn:li:share:7471563595688984576"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On Everyday": {
+      "main": [
+        [
+          {
+            "node": "Get Campaigns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Campaigns": {
+      "main": [
+        [
+          {
+            "node": "Intelligence Content Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Intelligence Content Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FireCrawl_Web_Scraper": {
+      "ai_tool": [
+        [
+          {
+            "node": "Intelligence Content Generator",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intelligence Content Generator": {
+      "main": [
+        [
+          {
+            "node": "Update Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Campaign": {
+      "main": [
+        [
+          {
+            "node": "Pollinations AI: Image Generation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pollinations AI: Image Generation": {
+      "main": [
+        [
+          {
+            "node": "Upload Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image": {
+      "main": [
+        [
+          {
+            "node": "Update Image & Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Live Link": {
+      "main": [
+        [
+          {
+            "node": "Update Status & Instagram Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Get Approved Campaign",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Approved Campaign": {
+      "main": [
+        [
+          {
+            "node": "Publish",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Intelligence Content Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a post": {
+      "main": [
+        [
+          {
+            "node": "Construct Live Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish": {
+      "main": [
+        [
+          {
+            "node": "Get Live Link",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construct Live Link": {
+      "main": [
+        [
+          {
+            "node": "Update Status & LinkedIn Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "93ea4a78-0ed0-46c4-84f8-2e1dec4da1d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4a4a90377450042b46020f6b6c17ea6937dd72754e7ef5c12983e8f93d41dfb2"
+  },
+  "nodeGroups": [],
+  "id": "pOIzYh8xvMkjOZuQ",
+  "tags": []
+}

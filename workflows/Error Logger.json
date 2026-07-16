@@ -1,0 +1,205 @@
+{
+  "name": "JCAIOAH-001-FinalProject-ErrorLoggers",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "workflow_id"
+            },
+            {
+              "name": "execution_id"
+            },
+            {
+              "name": "log_level"
+            },
+            {
+              "name": "error_type"
+            },
+            {
+              "name": "message"
+            },
+            {
+              "name": "context",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "79b06572-bd1c-45b3-8a50-adbba85abb49",
+      "name": "On Error"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "workflow_logs",
+          "mode": "list",
+          "cachedResultName": "workflow_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_id": "={{ $json.workflow_id }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "log_level": "={{ $json.log_level }}",
+            "error_type": "={{ $json.error_type }}",
+            "message": "={{ $json.message }}",
+            "context": "={{ $json.context }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "workflow_id",
+              "displayName": "workflow_id",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "log_level",
+              "displayName": "log_level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_type",
+              "displayName": "error_type",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "context",
+              "displayName": "context",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -16,
+        0
+      ],
+      "id": "021258f5-2bc8-4d29-8e02-495ad7f3bd5b",
+      "name": "insert log",
+      "credentials": {
+        "postgres": {
+          "id": "Khk9IaqS9ojU4ay7",
+          "name": "Postgres Account otechq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Error Logger Workflow\n\n### Core Flow:\n\n```\nError Operation → Trigger Sub-workflow → Capture Error Data → Save Log Database → Error Notification\n```",
+        "height": 144,
+        "width": 1040
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "96686590-83d3-4e5e-9f3a-cfb6c774d89e",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On Error": {
+      "main": [
+        [
+          {
+            "node": "insert log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7e6072c7-f8c3-4d0c-9cce-f49fcac9e588",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4a4a90377450042b46020f6b6c17ea6937dd72754e7ef5c12983e8f93d41dfb2"
+  },
+  "nodeGroups": [],
+  "id": "tJrHDlC4Ng4558Bs",
+  "tags": []
+}
