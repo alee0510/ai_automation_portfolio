@@ -1,6 +1,7 @@
 # AI Resume Screener & Recruiter Automation
 
-*(Insert workflow screenshot here)*
+![screenshot_01](../screenshots/ai_resume_screener_01.png)
+![screenshot_02](../screenshots/ai_resume_screener_02.png)
 
 ## Overview
 
@@ -71,6 +72,6 @@ The workflow automatically:
 
 ### Links
 
-GitHub _(if available)_
+[GitHub](https://github.com/alee0510/ai_automation_portfolio/blob/main/workflows/AI%20Resume%20Screener%20%26%20Recruiter%20Automation.json)
 
 

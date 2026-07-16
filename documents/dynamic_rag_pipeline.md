@@ -1,6 +1,7 @@
 # Dynamic RAG Pipeline & Vector Database Synchronization
 
-*(Insert architecture or workflow screenshot here)*
+![screenshot](../screenshots/dynamic_rag_pipeline.png)
+![screenshot](../screenshots/dynamic_rag_pipeline_db_schema.png)
 
 ## Overview
 
@@ -71,5 +72,5 @@ The workflow automatically:
 
 ### Links
 
-GitHub _(if available)_
+[GitHub](https://github.com/alee0510/ai_automation_portfolio/blob/main/workflows/Dynamic%20RAG%20Pipeline.json)
 

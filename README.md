@@ -27,7 +27,7 @@ Welcome to my AI Automation portfolio! This repository showcases production-read
 *   **Key Tech Stack**: n8n, Gemini AI, Google Sheets API, Cloudinary API, LinkedIn API, Instagram Graph API.
 
 ### 3. [Dynamic RAG Pipeline & Vector DB Sync](/documents/dynamic_rag_pipeline.md)
-*   **Workflow JSON**: [`RAG Operation Best Practice.json`](/workflows/RAG%20Operation%20Best%20Practice.json)
+*   **Workflow JSON**: [`RAG Operation Best Practice.json`](/workflows/Dynamic%20RAG%20Pipeline.json)
 *   **Problem**: Stale vector databases yield outdated info and hallucinations when documents are updated or deleted from cloud storage.
 *   **Solution**: An event-driven synchronization system that automatically tracks file creation, changes, and deletions in Google Drive, handles chunking and embedding generation with Gemini Embeddings, performs transactional upserts, and clears deleted records in a PostgreSQL + PGVector database.
 *   **Key Tech Stack**: n8n, PostgreSQL, PGVector, Google Gemini Embeddings, Google Drive API.

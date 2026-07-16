@@ -52,4 +52,4 @@ The workflow:
 
 ### Links
 
-GitHub _(if available)_
+[GitHub](https://github.com/alee0510/ai_automation_portfolio/blob/main/workflows/Automate%20Content%20Generator%20-%20v2.json)
