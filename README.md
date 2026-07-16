@@ -15,6 +15,7 @@ Welcome to my AI Automation portfolio! This repository showcases production-read
 
 ### 1. [AI Resume Screener & Recruiter Automation](/documents/ai_resume_screener.md)
 *   **Workflow JSON**: [`AI Resume Screener & Recruiter Automation.json`](/workflows/AI%20Resume%20Screener%20&%20Recruiter%20Automation.json)
+*   **Screenshot**: [`ai_resume_screener_01.png`](/screenshots/ai_resume_screener_01.png)
 *   **Problem**: Recruiting teams spend excessive hours manually vetting resumes, matching candidate profiles to multiple job specifications, and coordinating interviews.
 *   **Solution**: An intelligent end-to-end recruitment pipeline that listens for Gmail applications, parses resume attachments (PDF/DOCX), performs a Retrieval-Augmented Generation (RAG) semantic match against current JDs, evaluates candidates via Google Gemini (assigning match & confidence scores), and automatically drafts interview invitations (with Calendly links) or routes low-confidence files for human review.
 *   **Key Tech Stack**: n8n, Google Gemini (LLM), PostgreSQL + PGVector, Gmail & Google Drive APIs, Calendly, Slack notifications.
@@ -28,6 +29,7 @@ Welcome to my AI Automation portfolio! This repository showcases production-read
 
 ### 3. [Dynamic RAG Pipeline & Vector DB Sync](/documents/dynamic_rag_pipeline.md)
 *   **Workflow JSON**: [`RAG Operation Best Practice.json`](/workflows/Dynamic%20RAG%20Pipeline.json)
+*   **Screenshot**: [`dynamic_rag_pipeline.png`](/screenshots/dynamic_rag_pipeline.png)
 *   **Problem**: Stale vector databases yield outdated info and hallucinations when documents are updated or deleted from cloud storage.
 *   **Solution**: An event-driven synchronization system that automatically tracks file creation, changes, and deletions in Google Drive, handles chunking and embedding generation with Gemini Embeddings, performs transactional upserts, and clears deleted records in a PostgreSQL + PGVector database.
 *   **Key Tech Stack**: n8n, PostgreSQL, PGVector, Google Gemini Embeddings, Google Drive API.
